@@ -1,0 +1,7 @@
+#!/bin/bash
+
+grubcfg=/boot/grub/grub.cfg
+
+sed -i 's#\-\-class windows#-\-class windows --hotkey w#' $grubcfg
+sed -i 's#menuentry "Ubuntu"#menuentry "Ubuntu" --hotkey u#' $grubcfg
+

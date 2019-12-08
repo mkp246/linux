@@ -1,0 +1,40 @@
+#!/bin/bash
+PROXY_HOST=web-proxy.in.softwaregrp.net
+PROXY_PORT=8080
+PROXY_URL=http://$PROXY_HOST:$PROXY_PORT/
+APT_CONF=/etc/apt/apt.conf.d/80proxy
+
+if [[ $1 == 'init' ]]; then
+  gsettings set org.gnome.system.proxy ignore-hosts '["localhost", "127.0.0.0/8", "::1"]'
+  gsettings set org.gnome.system.proxy use-same-proxy true
+  gsettings set org.gnome.system.proxy.http use-authentication false
+  gsettings set org.gnome.system.proxy.http enabled false
+  gsettings set org.gnome.system.proxy.http port $PROXY_PORT
+  gsettings set org.gnome.system.proxy.http host $PROXY_HOST
+  gsettings set org.gnome.system.proxy.https port $PROXY_PORT
+  gsettings set org.gnome.system.proxy.https host $PROXY_HOST
+  gsettings set org.gnome.system.proxy.ftp port $PROXY_PORT
+  gsettings set org.gnome.system.proxy.ftp host $PROXY_HOST
+  gsettings set org.gnome.system.proxy.socks port $PROXY_PORT
+  gsettings set org.gnome.system.proxy.socks host $PROXY_HOST
+  gsettings set org.gnome.system.proxy mode 'none'
+elif [[ $1 == 'set' ]]; then
+  gsettings set org.gnome.system.proxy mode 'manual'
+  sudo snap set system proxy.http=$PROXY_URL
+  sudo snap set system proxy.https=$PROXY_URL
+  sudo cat <<EOF >$APT_CONF
+Acquire::http::proxy "$PROXY_URL";
+Acquire::ftp::proxy "$PROXY_URL";
+Acquire::https::proxy "$PROXY_URL";
+EOF
+
+elif [[ $1 == 'unset' ]]; then
+  unset all_proxy ftp_proxy http_proxy https_proxy no_proxy 
+  unset ALL_PROXY FTP_PROXY HTTP_PROXY HTTPS_PROXY NO_PROXY
+  sudo snap unset core proxy.http
+  sudo snap unset core proxy.https
+  gsettings set org.gnome.system.proxy mode 'none'
+  sudo echo >$APT_CONF
+fi
+exit 0;
+
